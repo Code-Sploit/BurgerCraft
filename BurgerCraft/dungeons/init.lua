@@ -116,6 +116,11 @@ minetest.register_chatcommand("startdungeon", {
 
         minetest.chat_send_player(name, "Starting your dungeon in 3 seconds!")
 
+	if bc_dungeons.active == 1 then
+		minetest.chat_send_player(name, "Sorry someone else is already using the dungeon!")
+		return
+	end
+
         minetest.after(3, function()
             player:set_pos(coords)
 
