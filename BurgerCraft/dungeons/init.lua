@@ -22,6 +22,8 @@ minetest.register_globalstep(function(dtime)
             -- Player died
 	    bc_dungeons.dungeonFailed(player)
 
+	    bc_dungeons.active = 0
+
             return
         end
     end
@@ -46,14 +48,16 @@ function bc_dungeons.calculateDungeonScore(data, completion)
 end
 
 function bc_dungeons.dungeonFailed(player)
-	minetest.chat_send_player(player:get_player_name(), "You failed the dungeon!")
-	minetest.chat_send_player(player:get_player_name(), "You received 1% of full completion XP")
+	minetest.chat_send_player(player, "You failed the dungeon!")
+	minetest.chat_send_player(player, "You received 1% of full completion XP")
 
-	local gainedExp = bc_dungeons.calculateDungeonScore({}, false)
-	local oldExp 	= burgercraft.getExperience(player)
+	local playerobj = minetest.get_player_by_name(player)
+
+	local gainedExp = bc_dungeons.calculateDungeonScore({}, 0)
+	local oldExp 	= burgercraft.getExperience(playerobj)
 	local newExp	= oldExp + gainedExp
 
-	burgercraft.setExperience(player, newExp)
+	burgercraft.setExperience(playerobj, newExp)
 
 	-- Deactivate the dungeon
 	bc_dungeons.active = 0
@@ -92,9 +96,11 @@ function bc_dungeons.startDungeon(player)
     minetest.after(10, function()
 	    local completed = bc_dungeons.checkDungeonStatus(player)
 
-	    if completed == 1 then
+	    if completed == 1 and bc_dungeons.active == 1 then
 		    bc_dungeons.dungeonCompleted(player)
 	    end
+
+	    bc_dungeons.active = 0
     end)
 end
 
