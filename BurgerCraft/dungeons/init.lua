@@ -20,21 +20,81 @@ minetest.register_globalstep(function(dtime)
 
         if pos.y < 8990 then
             -- Player died
-            return
-        end
+	    bc_dungeons.dungeonFailed(player)
 
-        if timer >= 5 then
-            minetest.add_entity(pos, "mobs_mc:iron_golem")
+            return
         end
     end
 end)
+
+function bc_dungeons.calculateDungeonScore(data, completion)
+	local totalScore = 100
+
+	if data.secrets then
+		totalScore += data.secrets
+	end
+
+	if data.tier then
+		totalScore += data.tier * 10
+	end
+
+	if completion == 0 then
+		return totalScore / 100
+	else
+		return totalScore
+	end
+end
+
+function bc_dungeons.dungeonFailed(player)
+	minetest.chat_send_player(player:get_player_name(), "You failed the dungeon!")
+	minetest.chat_send_player(player:get_player_name(), "You received 1% of full completion XP")
+
+	local gainedExp = bc_dungeons.calculateDungeonScore({}, false)
+	local oldExp 	= burgercraft.getExperience(player)
+	local newExp	= oldExp + gainedExp
+
+	burgercraft.setExperience(player, newExp)
+
+	-- Deactivate the dungeon
+	bc_dungeons.active = 0
+end
+
+function bc_dungeons.dungeonCompleted(player)
+	minetest.chat_send_player(player:get_player_name(), "You completed the dungeon!")
+	minetest.chat_send_player(player:get_player_name(), "You received 100% of full completion XP")
+
+	local gainedExp = bc_dungeons.calculateDungeonScore({}, true)
+	local oldExp	= burgercraft.getExperience(player)
+	local newExp	= oldExp + gainedExp
+
+	burgercraft.setExperience(player, newExp)
+
+	-- Deactivate the dungeon
+	bc_dungeons.active = 0
+
+function bc_dungeons.checkDungeonStatus(player)
+	local pos = player:get_pos()
+
+	if pos.y < 8990 then
+		return 0
+	else
+		return 1
+	end
+end
 
 function bc_dungeons.startDungeon(player)
     -- Start spawning 
     local pos = player:get_pos()
     local position_str = pos.x .. "," .. pos.y .. "," .. pos.z
 
-    minetest.add_entity(pos, "mobs_mc:iron_golem")
+    -- Wait until 2Minutes passed (10 seconds in alpha)
+    minetest.after(10, function()
+	    local completed = bc_dungeons.checkDungeonStatus(player)
+
+	    if completed == 1 then
+		    bc_dungeons.dungeonCompleted(player)
+	    end
+    end)
 end
 
 function bc_dungeons.addDungeonPlayer(name)
