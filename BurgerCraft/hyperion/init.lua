@@ -71,12 +71,25 @@ local function tpplayer(placer, pointing, pointed_thing)
     end
 end
 
+minetest.register_craftitem("hyperion:ancient_rubble", {
+	inventory_image = "ancient_rubble.png",
+	description = "Ancient Rubble",
+	stack_max = 16
+})
+
+minetest.register_craftitem("hyperion:handle", {
+	inventory_image = "handle.png",
+	description = "Handle",
+	stack_max = 1
+})
+
 minetest.register_craftitem("hyperion:hyperion", {
     inventory_image = "hyperion.png",
     description = "Hyperion",
     stackable = false,
-    max_stack = 1,
+    stack_max = 1,
     groups = {tool=1},
+    _mcl_toollike_wield = true,
 
     on_place = function(itemstack, placer, pointed_thing)
         implode(placer)
@@ -95,4 +108,13 @@ minetest.register_craftitem("hyperion:hyperion", {
         tpplayer(placer, false, pointed_thing)
         heal(placer)
     end,
+})
+
+minetest.register_craft({
+	output = "hyperion:hyperion",
+	recipe = {
+		{"mcl_core:diamond", "mcl_core:diamond", "mcl_core:diamond"},
+		{"hyperion:ancient_rubble", "mcl_core:diamond", "hyperion:ancient_rubble"},
+		{"mcl_core:emerald", "hyperion:handle", "mcl_core:emerald"}
+	}
 })
