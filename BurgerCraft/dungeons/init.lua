@@ -31,11 +31,11 @@ function bc_dungeons.calculateDungeonScore(data, completion)
 	local totalScore = 100
 
 	if data.secrets then
-		totalScore += data.secrets
+		totalScore = totalScore + data.secrets
 	end
 
 	if data.tier then
-		totalScore += data.tier * 10
+		totalScore = totalScore + (data.tier * 10)
 	end
 
 	if completion == 0 then
@@ -71,6 +71,7 @@ function bc_dungeons.dungeonCompleted(player)
 
 	-- Deactivate the dungeon
 	bc_dungeons.active = 0
+end
 
 function bc_dungeons.checkDungeonStatus(player)
 	local pos = player:get_pos()
@@ -124,6 +125,6 @@ minetest.register_chatcommand("startdungeon", {
 
             -- Start the dungeon
             bc_dungeons.startDungeon(player)
-        end)
+       end)
     end
 })
