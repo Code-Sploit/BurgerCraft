@@ -8,6 +8,6 @@ end
 
 function burgercraft.getExperience(player)
     if player then
-        return player:get_meta():get("BC_XP")
+        return player:get_meta():get("BC_XP") or 0
     end
 end
