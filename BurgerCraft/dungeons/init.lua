@@ -83,13 +83,15 @@ function bc_dungeons.getTierScore(tier)
 	for _,tdata in pairs(bc_dungeons.tiers) do
 		local scoreMul = tdata.scoreMul
 
-		return scoreMul
+		if tdata.name == tier then
+			return scoreMul
+		end
 	end
 end
 
 function bc_dungeons.calculateLoot(score, tier)
-    local new_array = {}
-    local loot      = {}
+    local pool = {}
+    local loot = {}
     
     for _,item in pairs(bc_dungeons.loot_table) do
         local weight  = item.weight
@@ -99,15 +101,15 @@ function bc_dungeons.calculateLoot(score, tier)
 		-- Apply tier score boost
 		local scoreMul = bc_dungeons.getTierScore(tier)
 
-        for i=0,weight do
-            table.insert(new_array, itemstr)
+        for i=1,weight do
+            table.insert(pool, itemstr)
         end
     end
 
     local loot_count = score / 100
 
-    for i=0,loot_count do
-        table.insert(loot, new_array[math.random(#new_array)])
+    for i=1,loot_count do
+        table.insert(loot, pool[math.random(#pool)])
     end
 
     return loot
