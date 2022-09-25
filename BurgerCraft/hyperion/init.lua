@@ -97,7 +97,7 @@ minetest.register_craftitem("hyperion:handle", {
 
 minetest.register_craftitem("hyperion:hyperion", {
     inventory_image = "hyperion.png",
-    description = "Hyperion",
+    description = "Hyperion\n" .. minetest.colorize("#FF0000", "Abilities:") .. "\n",
     stack_max = 1,
     groups = {tool=1},
     _mcl_toollike_wield = true,
@@ -159,7 +159,8 @@ minetest.register_craftitem("hyperion:implosion", {
 	groups = {tool=1},
 	_mcl_toollike_wield = true,
 	_hyperion_altar_index = 2,
-	_hyperion_scroll = "implosion"
+	_hyperion_scroll = "implosion",
+	_hyperion_true_name = "Implosion"
 })
 
 minetest.register_craftitem("hyperion:shadow_warp", {
@@ -169,7 +170,8 @@ minetest.register_craftitem("hyperion:shadow_warp", {
 	groups = {tool=1},
 	_mcl_toollike_wield = true,
 	_hyperion_altar_index = 2,
-	_hyperion_scroll = "shadow_warp"
+	_hyperion_scroll = "shadow_warp",
+	_hyperion_true_name = "Shadow Warp"
 })
 
 minetest.register_craftitem("hyperion:wither_shield", {
@@ -179,7 +181,8 @@ minetest.register_craftitem("hyperion:wither_shield", {
 	groups = {tool=1},
 	_mcl_toollike_wield = true,
 	_hyperion_altar_index = 2,
-	_hyperion_scroll = "wither_shield"
+	_hyperion_scroll = "wither_shield",
+	_hyperion_true_name = "Wither Shield"
 })
 
 minetest.register_craftitem("hyperion:altar_shard", {
@@ -283,7 +286,10 @@ minetest.register_node("hyperion:altar", {
 			return
 		end
 
+		local oldDesc = hypMeta:get("description") or "Hyperion\n" .. minetest.colorize("#FF0000", "Abilities:") .. "\n"
+
 		hypMeta:set_string(scrollDef._hyperion_scroll, "1")
+		hypMeta:set_string("description", oldDesc .. "\n" .. minetest.colorize("#FFFF00", scrollDef._hyperion_true_name))
 		
 		inv:set_stack("output", 1, hyp)
 	end,
