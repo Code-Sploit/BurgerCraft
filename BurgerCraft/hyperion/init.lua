@@ -71,14 +71,17 @@ local function tpplayer(placer, pointing, pointed_thing)
     end
 end
 
-function applyScroll(item, scroll)
+function applyScroll(item, scroll, player)
 	local metaData = item:get_meta()
 
 	metaData:set_string("HYPERION_SCROLL_APPLIED_" .. string.upper(scroll), "1")
+
+	player:set_wielded_item(item)
 end
 
 function getHypAbilities(item)
 	local metaData   = item:get_meta()
+
 	local abilities  = {
 		["implosion"]     = tonumber(metaData:get("HYPERION_SCROLL_APPLIED_IMPLOSION")),
 		["shadow_warp"]   = tonumber(metaData:get("HYPERION_SCROLL_APPLIED_SHADOW_WARP")),
@@ -111,12 +114,6 @@ minetest.register_craftitem("hyperion:hyperion", {
     on_place = function(itemstack, placer, pointed_thing)
 		local abilities = getHypAbilities(itemstack)
 
-		minetest.log(itemstack:get_meta():get("HYPERION_SCROLL_APPLIED_IMPLOSION"))
-
-		for ability in pairs(abilities) do
-			minetest.log(ability)
-		end
-
 		if abilities.implosion == 1 then
 			implode(placer)
 		end
@@ -134,10 +131,6 @@ minetest.register_craftitem("hyperion:hyperion", {
 
     on_secondary_use = function(itemstack, placer, pointed_thing)
 		local abilities = getHypAbilities(itemstack)
-
-		for ability in pairs(abilities) do
-			minetest.log(ability)
-		end
 
 		if abilities.implosion == 1 then
 			implode(placer)
@@ -200,8 +193,8 @@ minetest.register_chatcommand("applyscrolls", {
 		local player    = minetest.get_player_by_name(name)
 		local held_item = player:get_wielded_item()
 
-		applyScroll(held_item, "implosion")
-		applyScroll(held_item, "wither_shield")
-		applyScroll(held_item, "shadow_warp")
+		applyScroll(held_item, "implosion", player)
+		applyScroll(held_item, "wither_shield", player)
+		applyScroll(held_item, "shadow_warp", player)
 	end
 })
