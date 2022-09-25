@@ -2,15 +2,22 @@ local bc_dungeons = {
     players_in_dungeon = {},
     active = 0,
     loot_table = {
-        {itemstring = "hyperion:handle",                  weight = 1},
-        {itemstring = "hyperion:ancient_rubble",          weight = 3},
-        {itemstring = "mcl_core:obsidian",                weight = 10},
-        {itemstring = "mcl_end:end_stone",                weight = 10},
-        {itemstring = "mcl_deepslate:deepslate_chiseled", weight = 8},
-        {itemstring = "mcl_core:coalblock",               weight = 12},
-        {itemstring = "mcl_core:crying_obsidian",         weight = 6},
-        {itemstring = "",                                 weight = 8}
-    }
+        {itemstring = "hyperion:handle",                  weight   = 1,		rarity = 1},
+        {itemstring = "hyperion:ancient_rubble",          weight   = 3,		rarity = 3},
+        {itemstring = "mcl_core:obsidian",                weight   = 10,	rarity = 10},
+        {itemstring = "mcl_end:end_stone",                weight   = 10,	rarity = 10},
+        {itemstring = "mcl_deepslate:deepslate_chiseled", weight   = 8,		rarity = 8},
+        {itemstring = "mcl_core:coalblock",               weight   = 12,	rarity = 12},
+        {itemstring = "mcl_core:crying_obsidian",         weight   = 6,		rarity = 6},
+        {itemstring = "",                                 weight   = 8,		rarity = 8}
+    },
+	tiers = {
+		{name = "basic",								  scoreMul = 1},
+		{name = "advanced",								  scoreMul = 1.5},
+		{name = "hard",									  scoreMul = 2},
+		{name = "insane",								  scoreMul = 2.5},
+		{name = "extreme",								  scoreMul = 3}
+	}
 }
 
 local coords = {x=9000,y=9000,z=9000}
@@ -72,13 +79,25 @@ function bc_dungeons.clearDungeon()
 	end
 end
 
-function bc_dungeons.calculateLoot(score)
+function bc_dungeons.getTierScore(tier)
+	for _,tdata in pairs(bc_dungeons.tiers) do
+		local scoreMul = tdata.scoreMul
+
+		return scoreMul
+	end
+end
+
+function bc_dungeons.calculateLoot(score, tier)
     local new_array = {}
     local loot      = {}
     
     for _,item in pairs(bc_dungeons.loot_table) do
         local weight  = item.weight
         local itemstr = item.itemstring
+		local rarity  = item.rarity
+
+		-- Apply tier score boost
+		local scoreMul = bc_dungeons.getTierScore(tier)
 
         for i=0,weight do
             table.insert(new_array, itemstr)
