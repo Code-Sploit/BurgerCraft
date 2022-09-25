@@ -30,14 +30,47 @@ minetest.register_globalstep(function(dtime)
 
         if pos.y < 8990 then
             -- Player died
-	    bc_dungeons.dungeonFailed(player)
+	    	bc_dungeons.dungeonFailed(player)
 
-	    bc_dungeons.active = 0
+	    	bc_dungeons.active = 0
 
             return
         end
     end
 end)
+
+local etime = 0
+
+minetest.register_globalstep(function(dtime)
+	etime = etime + dtime
+
+	if etime < 1 then
+		return
+	end
+
+	if bc_dungeons.active == 0 then
+		return
+	end
+
+	for _,player in pairs(bc_dungeons.players_in_dungeon) do
+		local player = minetest.get_player_by_name(player)
+		local pos	 = player:get_pos()
+
+		minetest.add_entity(pos, "mobs_mc:iron_golem")
+		
+		local tnt_pos = {x=pos.x + math.random(3), y=pos.y + 4, z=pos.z + math.random(3)}
+
+		minetest.add_entity(tnt_pos, "mcl_tnt:tnt")
+	end
+
+	etime = 0
+end)
+
+function bc_dungeons.clearDungeon()
+	for _,obj in pairs(minetest.get_objects_inside_radius(coords, 20)) do
+		obj:remove()
+	end
+end
 
 function bc_dungeons.calculateLoot(score)
     local new_array = {}
@@ -93,6 +126,8 @@ function bc_dungeons.dungeonFailed(player)
 
 	-- Deactivate the dungeon
 	bc_dungeons.active = 0
+
+	bc_dungeons.clearDungeon()
 end
 
 function bc_dungeons.dungeonCompleted(player)
@@ -115,6 +150,8 @@ function bc_dungeons.dungeonCompleted(player)
     for _,item in pairs(loot) do
         inv:add_item("main", item)
     end
+
+	bc_dungeons.clearDungeon()
 end
 
 function bc_dungeons.checkDungeonStatus(player)
