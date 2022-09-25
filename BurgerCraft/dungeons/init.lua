@@ -4,7 +4,7 @@ local bc_dungeons = {
     loot_table = {
         {itemstring = "hyperion:handle",                  weight   = 1,		rarity = 1},
         {itemstring = "hyperion:ancient_rubble",          weight   = 3,		rarity = 3},
-		{itemstring = "hyperion:altar_shard",			  weight   = 5,		rarity = 5},
+	{itemstring = "hyperion:altar_shard",		  weight   = 5,		rarity = 5},
         {itemstring = "mcl_core:obsidian",                weight   = 10,	rarity = 10},
         {itemstring = "mcl_end:end_stone",                weight   = 10,	rarity = 10},
         {itemstring = "mcl_deepslate:deepslate_chiseled", weight   = 8,		rarity = 8},
