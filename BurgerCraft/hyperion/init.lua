@@ -71,6 +71,23 @@ local function tpplayer(placer, pointing, pointed_thing)
     end
 end
 
+function applyScroll(item, scroll)
+	local metaData = item:get_meta()
+
+	metaData:set_string("HYPERION_SCROLL_APPLIED_" .. string.upper(scroll), "1")
+end
+
+function getHypAbilities(item)
+	local metaData   = item:get_meta()
+	local abilities  = {
+		["implosion"]     = tonumber(metaData:get("HYPERION_SCROLL_APPLIED_IMPLOSION")),
+		["shadow_warp"]   = tonumber(metaData:get("HYPERION_SCROLL_APPLIED_SHADOW_WARP")),
+		["wither_shield"] = tonumber(metaData:get("HYPERION_SCROLL_APPLIED_WITHER_SHIELD"))
+	}
+
+	return abilities
+end
+
 minetest.register_craftitem("hyperion:ancient_rubble", {
 	inventory_image = "ancient_rubble.png",
 	description = "Ancient Rubble",
@@ -92,21 +109,49 @@ minetest.register_craftitem("hyperion:hyperion", {
     _mcl_toollike_wield = true,
 
     on_place = function(itemstack, placer, pointed_thing)
-        implode(placer)
+		local abilities = getHypAbilities(itemstack)
 
-	      minetest.sound_play("implosion", {gain=1})
+		minetest.log(itemstack:get_meta():get("HYPERION_SCROLL_APPLIED_IMPLOSION"))
 
-        tpplayer(placer, true, pointed_thing)
-        heal(placer)
+		for ability in pairs(abilities) do
+			minetest.log(ability)
+		end
+
+		if abilities.implosion == 1 then
+			implode(placer)
+		end
+
+		if abilities.wither_shield == 1 then
+			heal(placer)
+		end
+
+		if abilities.shadow_warp == 1 then
+			tpplayer(placer, true, pointed_thing)
+		end
+
+	    minetest.sound_play("implosion", {gain=1})
     end,
 
     on_secondary_use = function(itemstack, placer, pointed_thing)
-        implode(placer)
+		local abilities = getHypAbilities(itemstack)
 
-	      minetest.sound_play("implosion", {volume=1})
+		for ability in pairs(abilities) do
+			minetest.log(ability)
+		end
 
-        tpplayer(placer, false, pointed_thing)
-        heal(placer)
+		if abilities.implosion == 1 then
+			implode(placer)
+		end
+
+		if abilities.wither_shield == 1 then
+			heal(placer)
+		end
+
+		if abilities.shadow_warp == 1 then
+			tpplayer(placer, false, pointed_thing)
+		end
+
+	    minetest.sound_play("implosion", {gain=1})
     end,
 })
 
@@ -117,4 +162,46 @@ minetest.register_craft({
 		{"hyperion:ancient_rubble", "mcl_core:diamond", "hyperion:ancient_rubble"},
 		{"mcl_core:emerald", "hyperion:handle", "mcl_core:emerald"}
 	}
+})
+
+-- SCROLLS
+
+minetest.register_craftitem("hyperion:implosion", {
+	inventory_image = "implosion.png",
+	description = "Implosion Scroll",
+	stackable = false,
+	stack_max = 1,
+	groups = {tool=1},
+	_mcl_toollike_wield = true
+})
+
+minetest.register_craftitem("hyperion:shadow_warp", {
+	inventory_image = "shadow_warp.png",
+	description = "Shadow Warp Scroll",
+	stackable = false,
+	stack_max = 1,
+	groups = {tool=1},
+	_mcl_toollike_wield = true
+})
+
+minetest.register_craftitem("hyperion:wither_shield", {
+	inventory_image = "wither_shield.png",
+	description = "Wither Shield Scroll",
+	stackable = false,
+	stack_max = 1,
+	groups = {tool=1},
+	_mcl_toollike_wield = true
+})
+
+-- TEMP CHAT CMD
+
+minetest.register_chatcommand("applyscrolls", {
+	func = function(name, param)
+		local player    = minetest.get_player_by_name(name)
+		local held_item = player:get_wielded_item()
+
+		applyScroll(held_item, "implosion")
+		applyScroll(held_item, "wither_shield")
+		applyScroll(held_item, "shadow_warp")
+	end
 })
