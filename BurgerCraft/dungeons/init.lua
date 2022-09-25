@@ -2,8 +2,14 @@ local bc_dungeons = {
     players_in_dungeon = {},
     active = 0,
     loot_table = {
-        {itemstring = "hyperion:handle", weight = 1},
-        {itemstring = "hyperion:ancient_rubble", weight = 3}
+        {itemstring = "hyperion:handle",                  weight = 1},
+        {itemstring = "hyperion:ancient_rubble",          weight = 3},
+        {itemstring = "mcl_core:obsidian",                weight = 10},
+        {itemstring = "mcl_end:end_stone",                weight = 10},
+        {itemstring = "mcl_deepslate:deepslate_chiseled", weight = 8},
+        {itemstring = "mcl_core:coalblock",               weight = 12},
+        {itemstring = "mcl_core:crying_obsidian",         weight = 6},
+        {itemstring = "",                                 weight = 8}
     }
 }
 
@@ -107,7 +113,6 @@ function bc_dungeons.dungeonCompleted(player)
     local inv = player:get_inventory()
 
     for _,item in pairs(loot) do
-        minetest.log(item)
         inv:add_item("main", item)
     end
 end
