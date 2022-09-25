@@ -182,9 +182,28 @@ minetest.register_craftitem("hyperion:wither_shield", {
 	_hyperion_scroll = "wither_shield"
 })
 
+minetest.register_craftitem("hyperion:altar_shard", {
+	inventory_image = "altar_shard.png",
+	description = "Altar Shard",
+	stack_max = 64
+})
+
 minetest.register_node("hyperion:altar", {
 	description = "Hyperion Altar",
 	stack_max = 1,
+	tiles = {"altar_top.png", "altar_base.png", "altar_side.png"},
+	paramtype2 = "facedir",
+	drawtype = "nodebox",
+	node_box = {
+		type = "fixed",
+		fixed = {
+			{ -6 / 16, -8 / 16, -6 / 16, 6 / 16, -4 / 16, 6 / 16 },
+			{ -5 / 16, -4 / 16, -4 / 16, 5 / 16, -3 / 16, 4 / 16 },
+			{ -4 / 16, -3 / 16, -2 / 16, 4 / 16, 2 / 16, 2 / 16 },
+			{ -8 / 16, 2 / 16, -5 / 16, 8 / 16, 8 / 16, 5 / 16 },
+		}
+	},
+
 	on_construct = function(pos)
 		local meta 			= minetest.get_meta(pos)
 		local inv 			= meta:get_inventory()
@@ -298,4 +317,13 @@ minetest.register_node("hyperion:altar", {
 	
 		meta:from_table(meta2)
 	end,
+})
+
+minetest.register_craft({
+	output = "hyperion:altar",
+	recipe = {
+		{"mcl_core:iron_ingot", "mcl_core:diamond", "mcl_core:iron_ingot"},
+		{"mcl_core:diamond", "hyperion:altar_shard", "mcl_core:diamond"},
+		{"mcl_core:iron_ingot", "mcl_core:diamond", "mcl_core:iron_ingot"}
+	}
 })
