@@ -71,21 +71,13 @@ local function tpplayer(placer, pointing, pointed_thing)
     end
 end
 
-function applyScroll(item, scroll, player)
-	local metaData = item:get_meta()
-
-	metaData:set_string("HYPERION_SCROLL_APPLIED_" .. string.upper(scroll), "1")
-
-	player:set_wielded_item(item)
-end
-
 function getHypAbilities(item)
 	local metaData   = item:get_meta()
 
 	local abilities  = {
-		["implosion"]     = tonumber(metaData:get("HYPERION_SCROLL_APPLIED_IMPLOSION")),
-		["shadow_warp"]   = tonumber(metaData:get("HYPERION_SCROLL_APPLIED_SHADOW_WARP")),
-		["wither_shield"] = tonumber(metaData:get("HYPERION_SCROLL_APPLIED_WITHER_SHIELD"))
+		["implosion"]     = tonumber(metaData:get("implosion")),
+		["shadow_warp"]   = tonumber(metaData:get("shadow_warp")),
+		["wither_shield"] = tonumber(metaData:get("wither_shield"))
 	}
 
 	return abilities
@@ -106,10 +98,10 @@ minetest.register_craftitem("hyperion:handle", {
 minetest.register_craftitem("hyperion:hyperion", {
     inventory_image = "hyperion.png",
     description = "Hyperion",
-    stackable = false,
     stack_max = 1,
     groups = {tool=1},
     _mcl_toollike_wield = true,
+	_hyperion_altar_index = 1,
 
     on_place = function(itemstack, placer, pointed_thing)
 		local abilities = getHypAbilities(itemstack)
@@ -162,39 +154,148 @@ minetest.register_craft({
 minetest.register_craftitem("hyperion:implosion", {
 	inventory_image = "implosion.png",
 	description = "Implosion Scroll",
-	stackable = false,
+	
 	stack_max = 1,
 	groups = {tool=1},
-	_mcl_toollike_wield = true
+	_mcl_toollike_wield = true,
+	_hyperion_altar_index = 2,
+	_hyperion_scroll = "implosion"
 })
 
 minetest.register_craftitem("hyperion:shadow_warp", {
 	inventory_image = "shadow_warp.png",
 	description = "Shadow Warp Scroll",
-	stackable = false,
 	stack_max = 1,
 	groups = {tool=1},
-	_mcl_toollike_wield = true
+	_mcl_toollike_wield = true,
+	_hyperion_altar_index = 2,
+	_hyperion_scroll = "shadow_warp"
 })
 
 minetest.register_craftitem("hyperion:wither_shield", {
 	inventory_image = "wither_shield.png",
 	description = "Wither Shield Scroll",
-	stackable = false,
 	stack_max = 1,
 	groups = {tool=1},
-	_mcl_toollike_wield = true
+	_mcl_toollike_wield = true,
+	_hyperion_altar_index = 2,
+	_hyperion_scroll = "wither_shield"
 })
 
--- TEMP CHAT CMD
+minetest.register_node("hyperion:altar", {
+	description = "Hyperion Altar",
+	stack_max = 1,
+	on_construct = function(pos)
+		local meta 			= minetest.get_meta(pos)
+		local inv 			= meta:get_inventory()
 
-minetest.register_chatcommand("applyscrolls", {
-	func = function(name, param)
-		local player    = minetest.get_player_by_name(name)
-		local held_item = player:get_wielded_item()
+		inv:set_size("input", 2)
+		inv:set_size("output", 1)
 
-		applyScroll(held_item, "implosion", player)
-		applyScroll(held_item, "wither_shield", player)
-		applyScroll(held_item, "shadow_warp", player)
-	end
+		local altarFormspec = "size[9,8.75]"..
+			"background[-0.19,-0.25;9.41,9.49;mcl_anvils_inventory.png]"..
+			"label[0,4.0;"..minetest.formspec_escape(minetest.colorize("#313131", "Inventory")).."]"..
+			"list[current_player;main;0,4.5;9,3;9]"..
+			mcl_formspec.get_itemslot_bg(0,4.5,9,3)..
+			"list[current_player;main;0,7.74;9,1;]"..
+			mcl_formspec.get_itemslot_bg(0,7.74,9,1)..
+			"list[context;input;1,2.5;1,1;]"..
+			mcl_formspec.get_itemslot_bg(1,2.5,1,1)..
+			"list[context;input;4,2.5;1,1;1]"..
+			mcl_formspec.get_itemslot_bg(4,2.5,1,1)..
+			"list[context;output;8,2.5;1,1;]"..
+			mcl_formspec.get_itemslot_bg(8,2.5,1,1)..
+			"label[3,0.1;"..minetest.formspec_escape(minetest.colorize("#313131", "Add Scroll")).."]"..
+			"listring[context;output]"..
+			"listring[current_player;main]"..
+			"listring[context;input]"..
+			"listring[current_player;main]"
+
+		meta:set_string("formspec", altarFormspec)
+	end,
+
+	allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
+		return 0
+	end,
+	
+	allow_metadata_inventory_take = function(pos, listname, index, stack, player)
+		return stack:get_count()
+	end,
+	
+	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+		if listname == "output" then
+			return 0
+		end
+
+		local def = stack:get_definition()
+
+		if not def then
+			return 0
+		end
+
+		if index ~= def._hyperion_altar_index then
+			return 0
+		end
+
+		return stack:get_count()
+	end,
+
+	on_metadata_inventory_put = function(pos, listname, index, stack, player)
+		local inv = minetest.get_meta(pos):get_inventory()
+		inv:set_stack("output", 1, ItemStack())
+
+		local hyp    = inv:get_stack("input", 1)
+		local scroll = inv:get_stack("input", 2)
+
+		if hyp:is_empty() or scroll:is_empty() then
+			return
+		end
+
+		local scrollDef = scroll:get_definition()
+
+		if not scrollDef or not scrollDef._hyperion_scroll then
+			return
+		end
+
+		local hypMeta = hyp:get_meta()
+		local scrollMeta = scroll:get_meta()
+
+		if hypMeta:get(scrollDef._hyperion_scroll) then
+			return
+		end
+
+		hypMeta:set_string(scrollDef._hyperion_scroll, "1")
+		
+		inv:set_stack("output", 1, hyp)
+	end,
+
+	on_metadata_inventory_take = function(pos, listname, index, stack, player)
+		local inv = minetest.get_meta(pos):get_inventory()
+
+		if listname == "output" then
+			inv:set_stack("input", 1, ItemStack())
+			inv:set_stack("input", 2, ItemStack())
+		else
+			inv:set_stack("output", 1, ItemStack())
+		end
+	end,
+
+	after_dig_node = function(pos, oldnode, oldmetadata, digger)
+		local meta = minetest.get_meta(pos)
+		local meta2 = meta:to_table()
+
+		meta:from_table(oldmetadata)
+
+		local inv = meta:get_inventory()
+
+		for i = 1, 2 do
+			local stack = inv:get_stack("input", i)
+			if not stack:is_empty() then
+				local p = {x=pos.x+math.random(0, 10)/10-0.5, y=pos.y, z=pos.z+math.random(0, 10)/10-0.5}
+				minetest.add_item(p, stack)
+			end
+		end
+	
+		meta:from_table(meta2)
+	end,
 })
