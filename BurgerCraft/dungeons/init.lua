@@ -1,6 +1,10 @@
 local bc_dungeons = {
     players_in_dungeon = {},
-    active = 0
+    active = 0,
+    loot_table = {
+        {itemstring = "hyperion:handle", weight = 1},
+        {itemstring = "hyperion:ancient_rubble", weight = 3}
+    }
 }
 
 local coords = {x=9000,y=9000,z=9000}
@@ -28,6 +32,28 @@ minetest.register_globalstep(function(dtime)
         end
     end
 end)
+
+function bc_dungeons.calculateLoot(score)
+    local new_array = {}
+    local loot      = {}
+    
+    for _,item in pairs(bc_dungeons.loot_table) do
+        local weight  = item.weight
+        local itemstr = item.itemstring
+
+        for i=0,weight do
+            table.insert(new_array, itemstr)
+        end
+    end
+
+    local loot_count = score / 100
+
+    for i=0,loot_count do
+        table.insert(loot, new_array[math.random(#new_array)])
+    end
+
+    return loot
+end
 
 function bc_dungeons.calculateDungeonScore(data, completion)
 	local totalScore = 100
@@ -75,6 +101,15 @@ function bc_dungeons.dungeonCompleted(player)
 
 	-- Deactivate the dungeon
 	bc_dungeons.active = 0
+
+    -- Do loottable stuff
+    local loot = bc_dungeons.calculateLoot(100)
+    local inv = player:get_inventory()
+
+    for _,item in pairs(loot) do
+        minetest.log(item)
+        inv:add_item("main", item)
+    end
 end
 
 function bc_dungeons.checkDungeonStatus(player)
