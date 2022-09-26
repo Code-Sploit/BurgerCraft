@@ -60,14 +60,21 @@ minetest.register_globalstep(function(dtime)
 		return
 	end
 
+	local old_player = ""
+
 	for _,player in pairs(bc_dungeons.players_in_dungeon) do
 		local player = minetest.get_player_by_name(player)
 		local pos	 = player:get_pos()
 
-		minetest.add_entity(pos, "mobs_mc:iron_golem")
-		
 		local tnt_pos = {x=pos.x + math.random(3), y=pos.y + 4, z=pos.z + math.random(3)}
 
+		if player:get_player_name() == old_player then
+			return
+		end
+
+		old_player = player:get_player_name()
+
+		minetest.add_entity(pos, "mobs_mc:iron_golem")
 		minetest.add_entity(tnt_pos, "mcl_tnt:tnt")
 	end
 
