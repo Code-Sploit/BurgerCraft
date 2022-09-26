@@ -2,14 +2,23 @@ local bc_dungeons = {
     players_in_dungeon = {},
     active = 0,
     loot_table = {
+		-- HYPERION MATERIALS
         {itemstring = "hyperion:handle",                  weight   = 1,		rarity = 1},
         {itemstring = "hyperion:ancient_rubble",          weight   = 3,		rarity = 3},
-	{itemstring = "hyperion:altar_shard",		  weight   = 5,		rarity = 5},
+		{itemstring = "hyperion:altar_shard",		  	  weight   = 5,		rarity = 5},
+		
+		-- RANDOM LOOT
         {itemstring = "mcl_core:obsidian",                weight   = 10,	rarity = 10},
         {itemstring = "mcl_end:end_stone",                weight   = 10,	rarity = 10},
         {itemstring = "mcl_deepslate:deepslate_chiseled", weight   = 8,		rarity = 8},
         {itemstring = "mcl_core:coalblock",               weight   = 12,	rarity = 12},
         {itemstring = "mcl_core:crying_obsidian",         weight   = 6,		rarity = 6},
+		-- SCROLLS
+		{itemstring = "hyperion:wither_shield",			  weight   = 2,		rarity = 2},
+		{itemstring = "hyperion:shadow_warp",			  weight   = 2,		rarity = 2},
+		{itemstring = "hyperion:implosion",				  weight   = 2,		rarity = 2}
+
+		-- NOTHING L+BOZO
         {itemstring = "",                                 weight   = 8,		rarity = 8}
     },
 	tiers = {
