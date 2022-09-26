@@ -16,7 +16,7 @@ local bc_dungeons = {
 		-- SCROLLS
 		{itemstring = "hyperion:wither_shield",			  weight   = 2,		rarity = 2},
 		{itemstring = "hyperion:shadow_warp",			  weight   = 2,		rarity = 2},
-		{itemstring = "hyperion:implosion",				  weight   = 2,		rarity = 2}
+		{itemstring = "hyperion:implosion",				  weight   = 2,		rarity = 2},
 
 		-- NOTHING L+BOZO
         {itemstring = "",                                 weight   = 8,		rarity = 8}
@@ -27,7 +27,8 @@ local bc_dungeons = {
 		{name = "hard",									  scoreMul = 2},
 		{name = "insane",								  scoreMul = 2.5},
 		{name = "extreme",								  scoreMul = 3}
-	}
+	},
+	spawning_progress = 0
 }
 
 local coords = {x=9000,y=9000,z=9000}
@@ -227,6 +228,16 @@ function bc_dungeons.removeDungeonPlayer(name)
     table.remove(bc_dungeons.players_in_dungeon, name)
 end
 
+function bc_dungeons.playerInDungeon(player)
+	for _,name in pairs(bc_dungeons.players_in_dungeon) do
+		if player:get_playername() == name then
+			return 1
+		end
+	end
+
+	return 0
+end
+
 minetest.register_chatcommand("startdungeon", {
     func = function(name, param)
         if bc_dungeons.active == 1 then
@@ -253,4 +264,67 @@ minetest.register_chatcommand("startdungeon", {
             bc_dungeons.startDungeon(player)
        end)
     end
+})
+
+-- NEW DUNGEON SYSTEM
+
+-- REGISTER BOSS (UNIQUE TIERS)
+
+function bc_dungeons.setBossProgress(progress)
+	bc_dungeons.spawning_progress = progress
+end
+
+function bc_dungeons.getBossProgress(progress)
+	return bc_dungeons.spawning_progress
+end
+
+minetest.register_entity("dungeons:obj", {
+	--[[
+	initial_properties = {
+		visual = "mesh",
+		mesh   = "obj_0.obj"
+	},]]
+
+	mesh = "mcl_boats_boat.b3d",
+	textures = {"mcl_boats_texture_oak_boat.png", "mcl_boats_texture_oak_boat.png", "mcl_boats_texture_oak_boat.png", "mcl_boats_texture_oak_boat.png", "mcl_boats_texture_oak_boat.png"},
+
+	on_punch = function(puncher, time_from_last_punch, tool_capabilities, dir, damage)
+		if not bc_dungeons.playerInDungeon(puncher) == 1 then
+			return
+		end
+
+		if bc_dungeons.currentMobIdentifier == "0" then
+			local oldProgress = bc_dungeons.getBossProgress()
+			local newProgress = oldProgress + 10
+
+			bc_dungeons.setBossProgress(newProgress)
+		else
+			local oldProgress = bc_dungeons.getBossProgress()
+			local newProgress = oldProgress - 20
+
+			if newProgress < 0 then
+				newProgress = 0
+			end
+
+			bc_dungeons.setBossProgress(newProgress)
+		end
+	end
+})
+
+minetest.register_entity("dungeons:boss", {
+	initial_properties = {
+		visual = "mesh",
+		mesh   = "boss_0.obj"
+	},
+
+	on_punch = function(puncher, time_from_last_punch, tool_capabilities, dir, damage)
+
+	end
+})
+
+minetest.register_chatcommand("showprogress", {
+	description = "Show progress",
+	func = function(name, param)
+		minetest.log(bc_dungeons.getBossProgress())
+	end
 })
