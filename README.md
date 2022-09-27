@@ -1,3 +1,3 @@
 ## BurgerCraft
 
-# The official modpack created for the BurgerSMP Minetest server.
+The official modpack created for the BurgerSMP Minetest server.
