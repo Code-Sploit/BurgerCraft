@@ -1,3 +1,5 @@
+local HYPERION_DAMAGE = 10
+
 local function find(name, word)
     return string.match(name, word)
 end
@@ -12,8 +14,14 @@ local function implode(placer)
             local name = obj:get_luaentity().name
 
             if not find(name, "sign") and not find(name, "painting") and not find(name, "banner") then
-                obj:remove()
-            end
+		    local old_hp = obj:get_hp()
+
+		    if (old_hp - HYPERION_DAMAGE) <= 0 then
+			    obj:set_hp(0)
+		    end
+
+		    obj:set_hp(old_hp - HYPERION_DAMAGE)
+	    end
         end
     end
 end
