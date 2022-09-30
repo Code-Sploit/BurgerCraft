@@ -62,6 +62,10 @@ function dungeons.removeDungeon()
     local rotation        = 0
     local force_placement = true
 
+    for _, obj in pairs(minetest.get_objects_inside_radius(dungeons.spawn, 100)) do
+        obj:remove()
+    end
+
     minetest.place_schematic(dungeons.spawn, schematic, rotation, _, force_placement)
 end
 
@@ -114,7 +118,7 @@ local timerMobSpawner = 0
 minetest.register_globalstep(function(dtime)
     timerMobSpawner = timerMobSpawner + dtime
 
-    if timerMobSpawner < 3 then
+    if timerMobSpawner < 1 then
         return
     end
 
@@ -137,6 +141,7 @@ minetest.register_chatcommand("dungeon", {
             dungeons.createDungeon(player)
         else
             dungeons.onDungeonEnd(player)
+            dungeons.removeDungeon()
         end
     end
 })
