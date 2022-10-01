@@ -27,11 +27,11 @@ local dungeons = {
 }
 
 local formspec_dungeon_secret_chest =   "size[9,9]"..
-                                        "label[0,0;"..minetest.formspec_escape(minetest.colorize("#313131", "Secret Chest")) .. "]" ..
+                                        "label[3.5,0;"..minetest.formspec_escape(minetest.colorize("#313131", "Secret Chest")) .. "]" ..
                                         
-                                        mcl_formspec.get_itemslot_bg(3.5,3.5,1,1) ..
+                                        mcl_formspec.get_itemslot_bg(4,1.5,1,1) ..
                                         
-                                        "list[context;secret;3.5,3.5;9,3;]" ..
+                                        "list[context;secret;4,1.5;9,3;]" ..
                                         "label[0,4.0;".. minetest.formspec_escape(minetest.colorize("#313131", "Inventory")) .. "]" ..
                                         "list[current_player;main;0,4.5;9,3;9]"..
                                         
@@ -147,9 +147,11 @@ function dungeons.onDungeonEnd(player, failed)
 
     local score = dungeons.score
 
+    minetest.log(score)
+
     if score < 0 then
         score = "D"
-    elseif score < 200 and score > 0 then
+    elseif score < 200 and score >= 0 then
         score = "B"
     elseif score >= 200 and score < 250 then
         score = "A"
@@ -235,22 +237,41 @@ minetest.register_chatcommand("dungeon", {
 
 minetest.register_node("dungeonsv2:secret_chest", {
     name = "Secret Chest",
+    mesh = "secret_chest.obj",
+    use_texture_alpha = minetest.features.use_texture_alpha_string_modes and "opaque" or false,
+    paramtype = "light",
+    paramtype2 = "facedir",
+    stack_max = 64,
+    groups = {deco_block=1},
+
+    tiles = {
+        "secret_chest_top.png",
+        "secret_chest_top.png",
+        "secret_chest_top.png",
+        "secret_chest_top.png", 
+        "secret_chest_top.png",
+        "secret_chest_front.png"
+    },
 
     on_construct = function(pos)
 		local meta 			= minetest.get_meta(pos)
 		local inv 			= meta:get_inventory()
 
 		inv:set_size("secret", 1)
+        inv:set_stack("secret", 1, "mcl_core:diamond")
 
 		meta:set_string("formspec", formspec_dungeon_secret_chest)
 	end,
 
     on_rightclick = function(pos, node, clicker)
-        local inv = minetest.get_meta(pos):get_inventory()
+        local meta = minetest.get_meta(pos)
+        local inv  = meta:get_inventory()
 
-        inv:set_stack("secret", 1, "mcl_core:diamond")
-
-        dungeons.increaseDungeonScore(10)
+        if inv:is_empty("secret") then
+            minetest.chat_send_player(clicker:get_player_name(), "You have already found this secret!")
+        else
+            dungeons.increaseDungeonScore(10)
+        end
     end,
 
     allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
