@@ -147,8 +147,6 @@ function dungeons.onDungeonEnd(player, failed)
 
     local score = dungeons.score
 
-    minetest.log(score)
-
     if score < 0 then
         score = "D"
     elseif score < 200 and score > 0 then
