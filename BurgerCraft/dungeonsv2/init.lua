@@ -21,6 +21,7 @@ local dungeons = {
     },
 
     spawn = {x=9000,y=9000,z=9000},
+    lootRoom = {x=9008, y=9003, z=9008},
     score = 0,
     players = {},
     currentMap = ""
@@ -136,18 +137,12 @@ function dungeons.onDungeonEnd(player, failed)
         return
     end
 
-    local loot = dungeons.lootDungeon()
-    local inventory = player:get_inventory()
+    dungeons.removeDungeon()
+    dungeons.createLootRoom()
 
-    for _, item in pairs(loot) do
-        inventory:add_item("main", item)
-    end
-
-    player:set_pos({x = 0, y = 30, z = 0})
+    player:set_pos(dungeons.lootRoom)
 
     local score = dungeons.score
-
-    minetest.log(score)
 
     if score < 0 then
         score = "D"
@@ -167,6 +162,23 @@ function dungeons.onDungeonEnd(player, failed)
 
     dungeons.score = 0
     dungeons.currentMap = ""
+end
+
+function dungeons.createLootRoom()
+    local score = dungeons.score
+    local loot  = dungeons.lootDungeon()
+
+    -- First generate the room at spawn
+
+    local schematic       = minetest.get_worldpath() .. "/schems/loot_room.mts"
+    local rotation        = 0
+    local force_placement = true
+
+    minetest.place_schematic(dungeons.spawn, schematic, rotation, _, force_placement)
+
+    -- Now place chests
+
+
 end
 
 function dungeons.increaseDungeonScore(score)
@@ -230,7 +242,6 @@ minetest.register_chatcommand("dungeon", {
             dungeons.createDungeon(player)
         else
             dungeons.onDungeonEnd(player, 0)
-            dungeons.removeDungeon()
         end
     end
 })
