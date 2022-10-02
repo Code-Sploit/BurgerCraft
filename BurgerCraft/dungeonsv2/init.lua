@@ -22,6 +22,14 @@ local dungeons = {
 
     spawn = {x=9000,y=9000,z=9000},
     lootRoom = {x=9008, y=9003, z=9008},
+    
+    lootRoomPositions = {
+        {x=9003, y=9002, z=9003},
+        {x=9013, y=9002, z=9003},
+        {x=9013, y=9002, z=9013},
+        {x=9003, y=9002, z=9013}
+    },
+    
     score = 0,
     players = {},
     currentMap = ""
@@ -33,6 +41,21 @@ local formspec_dungeon_secret_chest =   "size[9,9]"..
                                         mcl_formspec.get_itemslot_bg(4,1.5,1,1) ..
                                         
                                         "list[context;secret;4,1.5;9,3;]" ..
+                                        "label[0,4.0;".. minetest.formspec_escape(minetest.colorize("#313131", "Inventory")) .. "]" ..
+                                        "list[current_player;main;0,4.5;9,3;9]"..
+                                        
+                                        mcl_formspec.get_itemslot_bg(0,4.5,9,3)..
+                                        
+                                        "list[current_player;main;0,7.74;9,1;]"..
+                                        
+                                        mcl_formspec.get_itemslot_bg(0,7.74,9,1)
+
+local formspec_dungeon_loot_chest   =   "size[9,9]"..
+                                        "label[3.5,0;"..minetest.formspec_escape(minetest.colorize("#313131", "Loot Chest")) .. "]" ..
+                                        
+                                        mcl_formspec.get_itemslot_bg(4,1.5,1,1) ..
+                                        
+                                        "list[context;loot;4,1.5;9,3;]" ..
                                         "label[0,4.0;".. minetest.formspec_escape(minetest.colorize("#313131", "Inventory")) .. "]" ..
                                         "list[current_player;main;0,4.5;9,3;9]"..
                                         
@@ -55,7 +78,27 @@ local dungeon_maps = {
     }
 }}
 
+function dungeons.positionEqual(pos1, pos2)
+    if pos1.x == pos2.x and pos1.y == pos2.y and pos1.z == pos2.z then
+        return 1
+    else
+        return 0
+    end
+end
+
+function dungeons.activityCheck()
+    if next(dungeons.players) == nil then
+        return 0
+    else
+        return 1
+    end
+end
+
 function dungeons.startDungeon(player)
+    if not dungeons.currentMap.schem == "" then
+        return
+    end
+
     local pos = dungeons.currentMap.spawnPosition
 
     player:set_pos(pos)
@@ -166,7 +209,6 @@ end
 
 function dungeons.createLootRoom()
     local score = dungeons.score
-    local loot  = dungeons.lootDungeon()
 
     -- First generate the room at spawn
 
@@ -177,8 +219,18 @@ function dungeons.createLootRoom()
     minetest.place_schematic(dungeons.spawn, schematic, rotation, _, force_placement)
 
     -- Now place chests
+    for _, position in pairs(dungeons.lootRoomPositions) do
+        local loot = dungeons.lootDungeon()
 
+        minetest.set_node(position, {name="dungeonsv2:loot_chest"})
 
+        local nodeMeta = minetest.get_meta(position)
+        local nodeInv  = nodeMeta:get_inventory()
+
+        for _, item in pairs(loot) do
+            nodeInv:set_stack("loot", 1, item)
+        end
+    end
 end
 
 function dungeons.increaseDungeonScore(score)
@@ -239,7 +291,9 @@ minetest.register_chatcommand("dungeon", {
         local player = minetest.get_player_by_name(name)
 
         if param == "start" then
-            dungeons.createDungeon(player)
+            if dungeons.activityCheck() == 0 then
+                dungeons.createDungeon(player)
+            end
         else
             dungeons.onDungeonEnd(player, 0)
         end
@@ -295,7 +349,60 @@ minetest.register_node("dungeonsv2:secret_chest", {
 
         inv:set_stack("secret", 1, ItemStack())
 
+        -- Clear all the other chests
+        for _, position in pairs(dungeons.lootRoomPositions) do
+            minetest.set_node(position, {name="air"})
+        end
+
 		return stackd:get_count()
+	end,
+    	
+	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+        return 0
+	end,
+})
+
+minetest.register_node("dungeonsv2:loot_chest", {
+    name = "Loot Chest",
+    mesh = "secret_chest.obj",
+    use_texture_alpha = minetest.features.use_texture_alpha_string_modes and "opaque" or false,
+    paramtype = "light",
+    paramtype2 = "facedir",
+    stack_max = 64,
+    groups = {deco_block=1},
+
+    tiles = {
+        "secret_chest_top.png",
+        "secret_chest_top.png",
+        "secret_chest_top.png",
+        "secret_chest_top.png", 
+        "secret_chest_top.png",
+        "secret_chest_front.png"
+    },
+
+    on_construct = function(pos)
+		local meta 			= minetest.get_meta(pos)
+		local inv 			= meta:get_inventory()
+
+		inv:set_size("loot", 1)
+
+		meta:set_string("formspec", formspec_dungeon_loot_chest)
+	end,
+
+    allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
+		return 0
+	end,
+	
+	allow_metadata_inventory_take = function(pos, listname, index, stack, player)
+        local inv    = minetest.get_meta(pos):get_inventory()
+
+        for _, position in pairs(dungeons.lootRoomPositions) do
+            if dungeons.positionEqual(pos, position) == 0 then
+                minetest.set_node(position, {name="air"})
+            end
+        end
+
+		return stack:get_count()
 	end,
     	
 	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
