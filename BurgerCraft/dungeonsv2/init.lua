@@ -1,8 +1,10 @@
+local MODNAME = "dungeonsv2"
+
 local dungeons = {
     lootTable = {
         -- HYPERION MATERIALS
         {itemstring = "hyperion:handle",                  weight   = 1},
-        {itemstring = "hyperion:ancient_rubble",          weight   = 3},
+        {itemstring = "hyperion:ancient_rubble",          weight   = 2},
         {itemstring = "hyperion:altar_shard",		  	  weight   = 8},
         
         -- RANDOM LOOT
@@ -12,9 +14,9 @@ local dungeons = {
         {itemstring = "mcl_core:coalblock",               weight   = 12},
         {itemstring = "mcl_core:crying_obsidian",         weight   = 6},
         -- SCROLLS
-        {itemstring = "hyperion:wither_shield",			  weight   = 2},
-        {itemstring = "hyperion:shadow_warp",			  weight   = 2},
-        {itemstring = "hyperion:implosion",				  weight   = 2},
+        {itemstring = "hyperion:wither_shield",			  weight   = 1},
+        {itemstring = "hyperion:shadow_warp",			  weight   = 1},
+        {itemstring = "hyperion:implosion",				  weight   = 1},
 
         -- NOTHING L+BOZO
         {itemstring = "",                                 weight   = 6}
@@ -22,6 +24,7 @@ local dungeons = {
 
     spawn = {x=9000,y=9000,z=9000},
     lootRoom = {x=9008, y=9003, z=9008},
+    bossCoords = {x=9008, y=9003, z=9008},
     
     lootRoomPositions = {
         {x=9003, y=9002, z=9003},
@@ -113,7 +116,7 @@ function dungeons.createDungeon(player)
 
     local map = dungeon_maps[math.random(#dungeon_maps)]
 
-    local schematic       = minetest.get_worldpath() .. "/schems/" .. map.schem
+    local schematic       = minetest.get_modpath(MODNAME) .. "/schems/" .. map.schem
     local rotation        = 0
     local force_placement = true
 
@@ -125,7 +128,7 @@ function dungeons.createDungeon(player)
 end
 
 function dungeons.removeDungeon()
-    local schematic       = minetest.get_worldpath() .. "/schems/" .. "dungeon_cs_1_air.mts"
+    local schematic       = minetest.get_modpath(MODNAME) .. "/schems/" .. "dungeon_cs_1_air.mts"
     local rotation        = 0
     local force_placement = true
 
@@ -205,6 +208,7 @@ function dungeons.onDungeonEnd(player, failed)
 
     dungeons.score = 0
     dungeons.currentMap = ""
+    dungeons.players = {}
 end
 
 function dungeons.createLootRoom()
@@ -212,7 +216,7 @@ function dungeons.createLootRoom()
 
     -- First generate the room at spawn
 
-    local schematic       = minetest.get_worldpath() .. "/schems/loot_room.mts"
+    local schematic       = minetest.get_modpath(MODNAME) .. "/schems/loot_room.mts"
     local rotation        = 0
     local force_placement = true
 
@@ -240,6 +244,27 @@ function dungeons.increaseDungeonScore(score)
     -- 250 - _   total score is S rank
 
     dungeons.score = dungeons.score + score
+end
+
+function dungeons.spawnBossRoom()
+    local schematic       = minetest.get_modpath(MODNAME) .. "/schems/bossroom.mts"
+    local rotation        = 0
+    local force_placement = true
+
+    minetest.place_schematic(dungeons.spawn, schematic, rotation, _, force_placement)
+end
+
+function dungeons.spawnBoss()
+    minetest.add_entity(dungeons.bossCoords, "dungeonsv2:boss")
+end
+
+function dungeons.startBossFight(player)
+    dungeons.spawnBossRoom()
+    dungeons.spawnBoss()
+
+    if player then
+        player:set_pos(dungeons.bossCoords)
+    end
 end
 
 --[[
@@ -339,6 +364,15 @@ minetest.register_node("dungeonsv2:secret_chest", {
         end
     end,
 
+    on_receive_fields = function(pos, formname, fields, sender)
+        if fields.quit == true then
+            local meta = minetest.get_meta(pos)
+            local inv  = meta:get_inventory()
+
+            inv:set_stack("secret", 1, ItemStack())
+        end
+    end,
+
     allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
 		return 0
 	end,
@@ -408,4 +442,20 @@ minetest.register_node("dungeonsv2:loot_chest", {
 	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
         return 0
 	end,
+})
+
+minetest.register_node("dungeonsv2:bossblock", {
+    name = "Boss Block",
+
+    on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+        dungeons.startBossFight(clicker)
+    end
+})
+
+minetest.register_entity("dungeonsv2:boss", {
+    visual = "mesh",
+
+    on_death = function(self, killer)
+        dungeons.onDungeonEnd(killer, 0)
+    end
 })
